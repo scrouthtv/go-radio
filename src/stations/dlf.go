@@ -5,6 +5,8 @@ import "time"
 import "bufio"
 import "fmt"
 
+import "golang.org/x/net/html"
+
 type Dlf struct {
 	name       string
 	url        string
@@ -35,10 +37,9 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 		return nil, err
 	}
 	var rdr *bufio.Reader = bufio.NewReader(resp.Body)
-	ReadUntilTag(rdr, []rune("span class=\"contenttitle-date\">")) // delete up to here
-	panic("last")
+	ReadUntilTag(rdr, "span class=\"contenttitle-date\">") // delete up to here
 	var program string
-	program, err = ReadUntilTag(rdr, []rune("div class=\"dlf-contentright\">"))
+	program, err = ReadUntilTag(rdr, "div class=\"dlf-contentright\">")
 	if err != nil {
 		return nil, err
 	}
@@ -47,46 +48,25 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 	return nil, nil
 }
 
-func ReadUntilTag(rdr *bufio.Reader, tag []rune) (string, error) {
-	var read string
-	var fullRead string = ""
+func ReadUntilTag(rdr *bufio.Reader, tag string) (string, error) {
+	var pre, inner string
 	var err error
-	var i int
-	var taglen int = len(tag)
-	var readRune rune
-	var validTag bool = true
-	var thisTag string
+	var full string = ""
 	for {
-		read, err = rdr.ReadString(byte('<'))
-		fullRead = fullRead + read
-		validTag = true
-		thisTag = ""
-		for i = 0; i < taglen; i++ {
-			readRune, _, err = rdr.ReadRune()
-			if err != nil {
-				fmt.Println("reading <")
-				return "", err
-			}
-			read += string(readRune)
-			thisTag += string(readRune)
-			if readRune == '>' {
-				validTag = false
-				break
-			} else if validTag && readRune != tag[i] {
-				validTag = false
-				break
-			}
+		pre, err = rdr.ReadString(byte('<'))
+		//full += "<"
+		if err != nil {
+			return full, err
 		}
-		if validTag {
-			return read, nil
-		} else {
-			fullRead = fullRead + thisTag
-			if i > 0 {
-				//fmt.Println("discarding", thisTag)
-				//fmt.Println(fullRead)
-				fmt.Println(read)
-				fmt.Println("--------------")
-			}
+		full += pre
+		inner, err = rdr.ReadString(byte('>'))
+		//full += ">"
+		if err != nil {
+			return full, err
+		}
+		full += inner
+		if inner == tag {
+			return full, nil
 		}
 	}
 }
