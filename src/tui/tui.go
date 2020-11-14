@@ -2,6 +2,6 @@ package tui
 
 import "fmt"
 
-func DoSomething() {
+func GuiThread() {
 	fmt.Println("heyy there")
 }
