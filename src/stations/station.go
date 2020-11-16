@@ -13,6 +13,6 @@ type Event struct {
 	Name     string
 	Info     string
 	Start    time.Time
-	Duration time.Duration
+	End      time.Time
 	Category string
 }

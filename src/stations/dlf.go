@@ -2,9 +2,10 @@ package stations
 
 import "net/http"
 import "time"
-import "bufio"
 import "fmt"
 import "strings"
+
+import "github.com/PuerkitoBio/goquery"
 
 type Dlf struct {
 	name       string
@@ -35,74 +36,24 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	var rdr *bufio.Reader = bufio.NewReader(resp.Body)
+	//var rdr *bufio.Reader = bufio.NewReader(resp.Body)
 
-	ReadUntilTag(rdr, "span class=\"contenttitle-date\">") // delete up to here
-	var program string
-	program, err = ReadUntilTag(rdr, "div class=\"dlf-contentright\">")
-	if err != nil {
-		return nil, err
-	}
-	resp.Body.Close()
+	var doc *goquery.Document
+	doc, err = goquery.NewDocumentFromReader(resp.Body)
 
-	//var events []Event
-	var row string
-	rdr = bufio.NewReader(strings.NewReader(program))
-	var rowRdr *bufio.Reader
+	var start, title string
+	//var current, prev *Event
+	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
+		start = s.Find(".time").Text()
+		title = s.Find("h3").Text()
+		if s.Has("span.title").Length() > 0 {
+			fmt.Println("multiple sub entries")
+		}
+		if strings.LastIndex(title, "aufnehmen") >= 0 {
+			title = title[0:strings.LastIndex(title, "aufnehmen")]
+		}
+		fmt.Printf("%s: %s\n", start, title)
+	})
 
-	//var name, info, start, duration, category string
-	var start string
-	for {
-		fmt.Println("loop")
-		ReadUntilTag(rdr, "tr id=\"anc")
-		row, err = ReadUntilTag(rdr, "/tr")
-		if err != nil {
-			break // should be continue
-		}
-
-		// for now I will assume a fixed order of the fields in the table
-		// and do this performance-wise in the worst possible way:
-		rowRdr = bufio.NewReader(strings.NewReader(row))
-		_, err = ReadUntilTag(rowRdr, "td class=\"time\">")
-		if err != nil {
-			fmt.Println("err 1", err)
-			break
-		}
-		start, err = ReadUntilTag(rowRdr, "") // up to the closing bracket
-		if err != nil {
-			fmt.Println("err 2", err)
-			break
-		}
-		fmt.Println(start)
-		var i int
-		for i = 0; i < 20; i++ {
-			fmt.Println()
-		}
-	}
-
-	return nil, nil
-}
-
-func ReadUntilTag(rdr *bufio.Reader, tag string) (string, error) {
-	var pre, inner string
-	var err error
-	var full strings.Builder
-	for {
-		pre, err = rdr.ReadString(byte('<'))
-		if err != nil {
-			return full.String(), err
-		}
-		full.WriteString(pre)
-		fmt.Println(inner)
-		fmt.Println(tag)
-		fmt.Println("---")
-		inner, err = rdr.ReadString(byte('>'))
-		if err != nil {
-			return full.String(), err
-		}
-		full.WriteString(inner)
-		if strings.HasPrefix(inner, tag) {
-			return full.String(), nil
-		}
-	}
+	return nil, err
 }
