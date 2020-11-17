@@ -2,6 +2,7 @@ package stations
 
 import "time"
 import "fmt"
+import "net/url"
 
 type Station interface {
 	GetName() (string, error)
@@ -16,6 +17,8 @@ type Event struct {
 	Start    time.Time
 	End      time.Time
 	Category string
+	Url      url.URL
+	CatUrl   url.URL
 }
 
 // %n: name

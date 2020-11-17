@@ -7,11 +7,17 @@ import "github.com/scrouthtv/go-radio/stations"
 import "time"
 import "fmt"
 import "os"
+import "strings"
 
 var r recorder.Recorder
 
 func main() {
 	//go tui.DrawThread()
+
+	if true == false {
+		strings.Split("", "")
+	}
+
 	r = recorder.DownloadRecorder{}
 	if len(os.Args) < 2 {
 		fmt.Println("not enough args")
@@ -34,12 +40,20 @@ func main() {
 			fmt.Println("err:")
 			fmt.Println(err)
 			os.Exit(1)
-		}
-		var i int
-		var ev stations.Event
-		for i, ev = range events {
-			fmt.Printf("%3d: %s from %02d:%02d to %02d:%02dh, Category %s", i, ev.Name, ev.Start.Hour(),
-				ev.Start.Minute(), ev.End.Hour(), ev.End.Minute(), ev.Category)
+		} else {
+			fmt.Println("got", len(events), "events:")
+			var i int
+			var ev stations.Event
+			for i, ev = range events {
+				fmt.Printf("%3d: %02d:%02d - %02d:%02dh \"%s\", more via %s, Category %s (%s)\n", i, ev.Start.Hour(),
+					ev.Start.Minute(), ev.End.Hour(), ev.End.Minute(), ev.Name, ev.Url.String(), ev.Category, ev.CatUrl.String())
+				if ev.Info != "" {
+					var line string
+					for _, line = range strings.Split(ev.Info, "\n") {
+						fmt.Println("  >", line)
+					}
+				}
+			}
 		}
 	default:
 		fmt.Println("Unknown option", os.Args[1])
