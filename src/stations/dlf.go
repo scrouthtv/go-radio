@@ -49,6 +49,8 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 	var doc *goquery.Document
 	doc, err = goquery.NewDocumentFromReader(resp.Body)
 
+	// TODO return slice of all errors that occured
+
 	var start, title, desc, category, url, caturl string
 	var current *Event
 	doc.Find(dlf.programStart).Find("tr").Each(func(i int, s *goquery.Selection) {
@@ -61,7 +63,7 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 			if s.Find("h3").Find("a").Length() > dlf.linksInTitle {
 				caturl, _ = s.Find("h3").Find("a").Attr("href")
 			}
-			current = createEvent(&dlf, &category, &desc, &start, nil, &category, &url, &caturl)
+			current = createEvent(&dlf, day, &category, &desc, &start, nil, &category, &url, &caturl)
 			events = append(events, *current)
 			s.Find("p").Each(func(i int, sub *goquery.Selection) {
 				if sub.HasClass("subDescription") {
@@ -77,7 +79,7 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 								url, _ = span.Find("a").Slice(0, 1).Attr("href")
 							}
 
-							current = createEvent(&dlf, &title, &desc, &start, nil, &category, &url, &caturl)
+							current = createEvent(&dlf, day, &title, &desc, &start, nil, &category, &url, &caturl)
 							events = append(events, *current)
 							// these are all the sub events in a multievent
 						}
@@ -114,7 +116,7 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 					desc = formatMultilineHtml(desc)
 				}
 			})
-			current = createEvent(&dlf, &title, &desc, &start, nil, &category, &url, &caturl)
+			current = createEvent(&dlf, day, &title, &desc, &start, nil, &category, &url, &caturl)
 			events = append(events, *current)
 		}
 	})
@@ -137,13 +139,15 @@ func formatMultilineHtml(html string) string {
 	}
 }
 
-func createEvent(dlf *Dlf, name *string, info *string, start *string, end *string, category *string, url *string, caturl *string) *Event {
+func createEvent(dlf *Dlf, day time.Time, name *string, info *string, start *string, end *string, category *string, url *string, caturl *string) *Event {
 	var startTime, endTime time.Time
 	if start != nil {
 		startTime, _ = time.Parse("15:04", trimSpaces(*start)[0:5])
+		startTime = combine(day, startTime, combineMaskYMD)
 	}
 	if end != nil {
 		endTime, _ = time.Parse("15:04", trimSpaces(*end))
+		endTime = combine(day, endTime, combineMaskYMD)
 		panic("not tested")
 	}
 
@@ -159,6 +163,59 @@ func createEvent(dlf *Dlf, name *string, info *string, start *string, end *strin
 	caturl = &emptyString
 
 	return &ev
+}
+
+//														 YMDhmsnloc
+const combineMaskYMD uint8 = 0b11100000
+
+func combine(a time.Time, b time.Time, mask uint8) time.Time {
+	var year, day int
+	var month time.Month
+	var hour, minute, second, nanosecond int
+	var loc *time.Location
+
+	if mask&0b10000000 > 0 {
+		year = a.Year()
+	} else {
+		year = b.Year()
+	}
+	if mask&0b01000000 > 0 {
+		month = a.Month()
+	} else {
+		month = b.Month()
+	}
+	if mask&0b00100000 > 0 {
+		day = a.Day()
+	} else {
+		day = b.Day()
+	}
+	if mask&0b00010000 > 0 {
+		hour = a.Hour()
+	} else {
+		hour = b.Hour()
+	}
+	if mask&0b00001000 > 0 {
+		minute = a.Minute()
+	} else {
+		minute = b.Minute()
+	}
+	if mask&0b00000100 > 0 {
+		second = a.Second()
+	} else {
+		second = b.Second()
+	}
+	if mask&0b00000010 > 0 {
+		nanosecond = a.Nanosecond()
+	} else {
+		nanosecond = b.Nanosecond()
+	}
+	if mask&0b00000001 > 0 {
+		loc = a.Location()
+	} else {
+		loc = b.Location()
+	}
+
+	return time.Date(year, month, day, hour, minute, second, nanosecond, loc)
 }
 
 func absUrl(dlf *Dlf, urlStr string) url.URL {
