@@ -1,6 +1,6 @@
 package main
 
-//import "github.com/scrouthtv/go-radio/tui"
+import "github.com/scrouthtv/go-radio/tui"
 import "github.com/scrouthtv/go-radio/recorder"
 import "github.com/scrouthtv/go-radio/stations"
 
@@ -34,6 +34,13 @@ func main() {
 		} else {
 			fmt.Println(err)
 		}
+	case "tui":
+		go tui.TuiLoop()
+		time.Sleep(1 * time.Second)
+		for tui.Running {
+			time.Sleep(1 * time.Second)
+		}
+		os.Exit(0)
 	case "dlf-programm":
 		events, err := stations.Deutschlandfunk.DailyProgram(time.Now())
 		if err != nil {
