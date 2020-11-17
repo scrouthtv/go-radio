@@ -2,19 +2,22 @@ package stations
 
 import "net/http"
 import "time"
-import "fmt"
 import "strings"
 
 import "github.com/PuerkitoBio/goquery"
 
 type Dlf struct {
-	name       string
-	url        string
-	programurl string
+	name         string
+	url          string
+	programurl   string
+	programStart string // some tag before or at the start of the program table
+	subCatIdent  string // some tag that only occurs inside events that have multiple sub events
+	subTimeIdx   int
+	subTitleIdx  int
 }
 
-var Deutschlandfunk Dlf = Dlf{"Deutschlandfunk", "https://st01.sslstream.dlf.de/dlf/01/high/aac/stream.aac", "https://www.deutschlandfunk.de/programmvorschau.281.de.html"}
-var DlfKultur Dlf = Dlf{"Deutschlandfunk", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac", "https://www.deutschlandfunkkultur.de/programmvorschau.282.de.html"}
+var Deutschlandfunk Dlf = Dlf{"Deutschlandfunk", "https://st01.sslstream.dlf.de/dlf/01/high/aac/stream.aac", "https://www.deutschlandfunk.de/programmvorschau.281.de.html", ".dlf-contentleft", "td.description", 0, 1}
+var DlfKultur Dlf = Dlf{"Deutschlandfunk", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac", "https://www.deutschlandfunkkultur.de/programmvorschau.282.de.html", ".drk-tagesprogramm", "p.subDescription", 1, 2}
 
 func (dlf Dlf) GetName() (string, error) {
 	return dlf.name, nil
@@ -42,16 +45,10 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 	var doc *goquery.Document
 	doc, err = goquery.NewDocumentFromReader(resp.Body)
 
-	if true == false {
-		fmt.Println("dont annoy me w unused imports if im trying to debug ffs")
-		strings.Split("asdf", "")
-	}
-
 	var start, title, desc, category string
 	var current *Event
-	// dlf-contentleft might be named differently on other sites
-	doc.Find(".dlf-contentleft").Find("tr").Each(func(i int, s *goquery.Selection) {
-		if s.Find("td.description").Has("span.title").Length() > 0 { // has multiple sub events
+	doc.Find(dlf.programStart).Find("tr").Each(func(i int, s *goquery.Selection) {
+		if s.Find(dlf.subCatIdent).Has("span.title").Length() > 0 { // has multiple sub events
 			start = s.Find("td").Slice(0, 1).Text()
 			if len(events) > 0 {
 				events[len(events)-1].End, err = time.Parse("15:04 Uhr", start)
@@ -61,17 +58,13 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 			events = append(events, *current)
 			s.Find("p").Each(func(i int, sub *goquery.Selection) {
 				if sub.HasClass("subDescription") {
-					if start == "10:08 Uhr" {
-						/*fmt.Println("no info:")
-						fmt.Println(sub.Text())*/
-					}
 					sub.Find("span").Each(func(i int, span *goquery.Selection) {
-						if i == 0 { // the first element is the start time
+						if i == dlf.subTimeIdx { // the first element is the start time
 							start = span.Text()
 							if len(events) > 0 {
-								events[len(events)-1].End, err = time.Parse("15:04", start)
+								events[len(events)-1].End, err = time.Parse("15:04", start[0:5])
 							}
-						} else { // the second is the title
+						} else if i == dlf.subTitleIdx { // the second is the title
 							title = span.Text()
 							current = createEvent(&title, &desc, &start, nil, &category)
 							events = append(events, *current)
@@ -79,10 +72,6 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 						}
 					})
 				} else {
-					if start == "10:08 Uhr" {
-						/*fmt.Println("info")
-						fmt.Println(sub.Text())*/
-					}
 					var descHtml string
 					descHtml, err = sub.Html()
 					events[len(events)-1].Info += formatMultilineHtml(descHtml)
@@ -94,7 +83,7 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 				if cell.HasClass("time") {
 					start = cell.Text()
 					if len(events) > 0 {
-						events[len(events)-1].End, err = time.Parse("15:04 Uhr", start)
+						events[len(events)-1].End, err = time.Parse("15:04", start[0:5])
 					}
 				} else {
 					title = s.Find("h3").Text()
@@ -110,7 +99,6 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 			current = createEvent(&title, &desc, &start, nil, &category)
 			events = append(events, *current)
 		}
-		//fmt.Printf("%s: %s\n", start, title)
 	})
 
 	return events, err
@@ -134,14 +122,10 @@ func formatMultilineHtml(html string) string {
 func createEvent(name *string, info *string, start *string, end *string, category *string) *Event {
 	var startTime, endTime time.Time
 	if start != nil {
-		if strings.HasSuffix(*start, " Uhr") {
-			startTime, _ = time.Parse("15:04 Uhr", *start)
-		} else {
-			startTime, _ = time.Parse("15:04", *start)
-		}
+		startTime, _ = time.Parse("15:04", trimSpaces(*start)[0:5])
 	}
 	if end != nil {
-		endTime, _ = time.Parse("15:04", *end)
+		endTime, _ = time.Parse("15:04", trimSpaces(*end))
 		panic("not tested")
 	}
 
