@@ -7,9 +7,11 @@ import "github.com/nsf/termbox-go"
 import "github.com/scrouthtv/go-radio/stations"
 
 type timelineScreen struct {
-	station stations.Station
-	events  []stations.Event
-	cursor  Point
+	station   stations.Station
+	events    []stations.Event
+	cursor    Point
+	selected  *stations.Event
+	highlight func(station *stations.Station, ev *stations.Event)
 }
 
 func (scr *timelineScreen) title() string {
@@ -43,7 +45,7 @@ func (scr *timelineScreen) draw(lt Point, rb Point) {
 
 	// draw the actual timeline:
 	var events []stations.Event = SortEventsByStart(scr.events)
-	var event stations.Event
+	var event, sEv stations.Event
 	var row int = 1
 	var eMin int // event minute
 	x = 0
@@ -64,6 +66,12 @@ func (scr *timelineScreen) draw(lt Point, rb Point) {
 			}
 			if scr.cursor.Y == 0 && scr.cursor.X == count {
 				tbprint(lt.X+2+x, lt.Y+row, colcur, coldef, event.Name[0:w])
+				sEv = event
+				scr.selected = &sEv // this is a very hacky implementation that should be fixed.
+				// the basic problem is that 'event' itself will get overridden in the next loop run
+				// so I copy it to sEv and select the pointer to that one. Instead, I should loop
+				// over the pointers to the elements in the events array
+				scr.highlight(&scr.station, &sEv)
 			} else {
 				tbprint(lt.X+2+x, lt.Y+row, coldef, coldef, event.Name[0:w])
 			}
@@ -82,6 +90,7 @@ func (scr *timelineScreen) event(ev termbox.Event) bool {
 			return true
 		} else if ev.Key == termbox.KeyArrowLeft {
 			scr.cursor.X--
+			return true
 		} // up & down is handled by the station screen
 	}
 	return false

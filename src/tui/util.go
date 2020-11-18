@@ -4,9 +4,12 @@ import "strings"
 import "sort"
 import "time"
 
+import "github.com/mitchellh/go-wordwrap" // pretty schtoopid to use a whole lib for this single purpose
+
 import "github.com/scrouthtv/go-radio/stations"
 
 func softwrap(msg string, width int) []string {
+	return strings.Split(wordwrap.WrapString(msg, uint(width)), "\n")
 	var i int
 	var line string
 	var lines []string
@@ -24,6 +27,25 @@ func softwrap(msg string, width int) []string {
 				stripped = width - len(line) - 1
 				if stripped > len(word)-1 {
 					stripped = len(word) - 1
+				}
+				if stripped < 0 {
+					// TODO this is super bugged
+					return lines
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log("")
+					log(lines)
+					log("current word: ", word)
+					log("want to strip ", stripped)
+					log("current line: ", line)
 				}
 				line += " " + word
 				lines = append(lines, line)

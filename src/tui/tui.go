@@ -36,6 +36,9 @@ var Running bool = false
 const coldef termbox.Attribute = termbox.ColorDefault
 const colcur termbox.Attribute = coldef | termbox.AttrReverse
 const colsel termbox.Attribute = coldef | termbox.AttrBold
+const colimp termbox.Attribute = termbox.ColorWhite | termbox.AttrBold
+const colgry termbox.Attribute = termbox.ColorBlack
+const colred termbox.Attribute = termbox.ColorRed
 
 var currentScreen iScreen
 var focusScreen iScreen
@@ -58,8 +61,8 @@ func TuiLoop() error {
 		return err
 	}
 
-	var scr stationScreen = NewStationScreen(stations.Deutschlandfunk, time.Now())
-	availScreens = append(availScreens, &homeScreen{}, &scr)
+	var scr *stationScreen = NewStationScreen(stations.Deutschlandfunk, time.Now())
+	availScreens = append(availScreens, &homeScreen{}, scr)
 
 	availScreens[1].show()
 	currentScreen.focus()
@@ -102,7 +105,7 @@ func boxprint(lt Point, rb Point, fg termbox.Attribute, bg termbox.Attribute, ms
 	var lines []string = softwrap(msg, width)
 	var rows int = len(lines)
 	if rows > rb.Y-lt.Y {
-		rows = rb.Y - lt.Y
+		rows = rb.Y - lt.Y + 1
 	}
 	var row int
 	for row = 0; row < rows; row++ {
@@ -112,11 +115,11 @@ func boxprint(lt Point, rb Point, fg termbox.Attribute, bg termbox.Attribute, ms
 }
 
 func centerprint(lt Point, rb Point, fg termbox.Attribute, bg termbox.Attribute, msg string, surroundWithAttr bool) int {
-	var width int = rb.X - lt.X
+	var width int = rb.X - lt.X + 1
 	var lines []string = softwrap(msg, width)
 	var rows int = len(lines)
 	if rows > rb.Y-lt.Y {
-		rows = rb.Y - lt.Y
+		rows = rb.Y - lt.Y + 1
 	}
 	var row int
 	var pfx, sfx int
@@ -125,11 +128,12 @@ func centerprint(lt Point, rb Point, fg termbox.Attribute, bg termbox.Attribute,
 	for row = 0; row < rows; row++ {
 		line = []rune(lines[row])
 		if IsFullRune(line[len(line)-1]) {
-			pfx = int(math.Floor(float64(width-len(lines[row])) / 2.0))
-			sfx = int(math.Ceil(float64(width-len(lines[row])) / 2.0))
+			pfx = int(math.Floor(float64(width-len(line)) / 2.0))
+			sfx = int(math.Ceil(float64(width-len(line)) / 2.0))
+			// because we count the runes, and not bytes in the string, umls are centered correctly
 		} else {
-			pfx = int(math.Ceil(float64(width-len(lines[row])) / 2.0))
-			sfx = int(math.Floor(float64(width-len(lines[row])) / 2.0))
+			pfx = int(math.Ceil(float64(width-len(line)) / 2.0))
+			sfx = int(math.Floor(float64(width-len(line)) / 2.0))
 		}
 		if surroundWithAttr {
 			tbprint(lt.X, lt.Y+row, fg, bg, strings.Repeat(" ", pfx)+lines[row]+strings.Repeat(" ", sfx))

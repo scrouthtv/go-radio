@@ -14,11 +14,17 @@ type stationScreen struct {
 	events   []stations.Event // this could also be a pointer to the same array in timelineScreen
 	err      error
 	timeline *timelineScreen
+	inlineEv *eventScreen
+	selected *stations.Event
 }
 
-func NewStationScreen(station stations.Station, day time.Time) stationScreen {
-	return stationScreen{station, day, InvalidPoint, []stations.Event{}, nil,
-		&timelineScreen{station, []stations.Event{}, InvalidPoint}}
+func NewStationScreen(station stations.Station, day time.Time) *stationScreen {
+	var scr stationScreen = stationScreen{station, day, InvalidPoint, []stations.Event{}, nil,
+		&timelineScreen{station, []stations.Event{}, InvalidPoint, nil, nil}, &eventScreen{nil}, nil}
+	scr.timeline.highlight = func(station *stations.Station, ev *stations.Event) {
+		scr.selectEvent(ev)
+	}
+	return &scr
 }
 
 func (scr *stationScreen) title() string {
@@ -48,13 +54,19 @@ func (scr *stationScreen) draw(lt Point, rb Point) {
 		row++
 	}
 
-	scr.loadEvents()
 	scr.timeline.draw(lt.Add(0, row+1), rb)
+	scr.inlineEv.draw(lt.Add(1, row+5), rb)
 }
 
 func (scr *stationScreen) loadEvents() {
 	scr.events, scr.err = scr.station.DailyProgram(scr.day)
 	scr.timeline.events = scr.events
+}
+
+func (scr *stationScreen) selectEvent(ev *stations.Event) {
+	scr.timeline.selected = ev
+	scr.inlineEv.ev = ev
+	scr.selected = ev
 }
 
 func (scr *stationScreen) event(ev termbox.Event) bool {
