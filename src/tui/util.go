@@ -42,6 +42,10 @@ func softwrap(msg string, width int) []string {
 	return lines
 }
 
+func minutesToHM(minutes int) (int, int) {
+	return minutes / 60, minutes % 60
+}
+
 func SortEventsByStart(events []stations.Event) []stations.Event {
 	sort.SliceStable(events, func(i1 int, i2 int) bool {
 		return events[i2].Start.After(events[i1].Start)

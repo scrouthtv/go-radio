@@ -41,10 +41,7 @@ var currentScreen iScreen
 var focusScreen iScreen
 var sidebar *sidebarScreen
 
-var availScreens []iScreen = []iScreen{
-	&homeScreen{},
-	&timelineScreen{stations.Deutschlandfunk, time.Now(), InvalidPoint, []stations.Event{}, nil},
-}
+var availScreens []iScreen = []iScreen{}
 
 // this might not work since iScreens don't implement any comparation functionality
 var overlays map[iScreen]Area = make(map[iScreen]Area)
@@ -60,6 +57,9 @@ func TuiLoop() error {
 	if err != nil {
 		return err
 	}
+
+	var scr stationScreen = NewStationScreen(stations.Deutschlandfunk, time.Now())
+	availScreens = append(availScreens, &homeScreen{}, &scr)
 
 	availScreens[1].show()
 	currentScreen.focus()
