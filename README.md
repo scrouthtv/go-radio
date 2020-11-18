@@ -17,7 +17,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+To compile:
+1. Download the source tree or latest release
+2. Run `go build` inside the `src` folder.
+Currently, `cgo` is only employed in the dependencies, so cross-compilation should work fine.
 
-This program is not designed to circumvent Copyright restrictions. It is only meant for archiving purposes.
+All versions prior to `1.0.0` are only pre-release preview versions and only tagged to demonstrate a new feature preview.
+Pre-Releases are neither backwards compatible, stable nor reliable and might change without notice.
+
+*Disclaimer: This program is not designed to circumvent Copyright restrictions. It is only meant for archiving purposes.
 As long as you don't redistribute recordings, it is considered "fair use".
-Allowance is made for "fair use" for purposes such as criticism, comment, news reporting, teaching, scholarship, and research. Fair use is a use permitted by copyright statute that might otherwise be infringing. Non-profit, educational or personal use tips the balance in favor of fair use.
+Allowance is made for "fair use" for purposes such as criticism, comment, news reporting, teaching, scholarship, and research. Fair use is a use permitted by copyright statute that might otherwise be infringing. Non-profit, educational or personal use tips the balance in favor of fair use.*
