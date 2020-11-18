@@ -1,6 +1,10 @@
 package tui
 
 import "strings"
+import "sort"
+import "time"
+
+import "github.com/scrouthtv/go-radio/stations"
 
 func softwrap(msg string, width int) []string {
 	var i int
@@ -38,6 +42,13 @@ func softwrap(msg string, width int) []string {
 	return lines
 }
 
+func SortEventsByStart(events []stations.Event) []stations.Event {
+	sort.SliceStable(events, func(i1 int, i2 int) bool {
+		return events[i2].Start.After(events[i1].Start)
+	})
+	return events
+}
+
 func shrink(str string, length int) string {
 	if length <= 0 {
 		return ""
@@ -48,6 +59,10 @@ func shrink(str string, length int) string {
 		return str[0:length-3] + "..."
 	}
 	return str
+}
+
+func timeAsMinutes(time time.Time) int {
+	return time.Hour()*60 + time.Minute()
 }
 
 func (p Point) Add(x int, y int) Point {

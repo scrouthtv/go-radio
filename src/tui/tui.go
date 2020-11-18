@@ -43,7 +43,7 @@ var sidebar *sidebarScreen
 
 var availScreens []iScreen = []iScreen{
 	&homeScreen{},
-	&timelineScreen{stations.Deutschlandfunk, time.Now(), InvalidPoint},
+	&timelineScreen{stations.Deutschlandfunk, time.Now(), InvalidPoint, []stations.Event{}, nil},
 }
 
 // this might not work since iScreens don't implement any comparation functionality
@@ -61,7 +61,7 @@ func TuiLoop() error {
 		return err
 	}
 
-	availScreens[0].show()
+	availScreens[1].show()
 	currentScreen.focus()
 	var sidebar iScreen = &sidebarScreen{InvalidPoint}
 	sidebar.show()
