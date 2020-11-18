@@ -52,12 +52,15 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 	// TODO return slice of all errors that occured
 
 	var start, title, desc, category, url, caturl string
+	var endTime time.Time
 	var current *Event
 	doc.Find(dlf.programStart).Find("tr").Each(func(i int, s *goquery.Selection) {
 		if s.Find(dlf.subCatIdent).Has("span.title").Length() > 0 { // has multiple sub events
 			start = s.Find("td").Slice(0, 1).Text()
 			if len(events) > 0 {
-				events[len(events)-1].End, err = time.Parse("15:04 Uhr", start)
+				endTime, err = time.Parse("15:04 Uhr", start)
+				endTime = combine(day, endTime, combineMaskYMD)
+				events[len(events)-1].End = endTime
 			}
 			category = s.Find("h3").Slice(0, 1).Text()
 			if s.Find("h3").Find("a").Length() > dlf.linksInTitle {
@@ -71,7 +74,9 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 						if i == dlf.subTimeIdx { // the first element is the start time
 							start = span.Text()
 							if len(events) > 0 {
-								events[len(events)-1].End, err = time.Parse("15:04", start[0:5])
+								endTime, err = time.Parse("15:04", start[0:5])
+								endTime = combine(day, endTime, combineMaskYMD)
+								events[len(events)-1].End = endTime
 							}
 						} else if i == dlf.subTitleIdx { // the second is the title
 							title = span.Text()
@@ -97,7 +102,9 @@ func (dlf Dlf) DailyProgram(day time.Time) ([]Event, error) {
 				if cell.HasClass("time") {
 					start = cell.Text()
 					if len(events) > 0 {
-						events[len(events)-1].End, err = time.Parse("15:04", start[0:5])
+						endTime, err = time.Parse("15:04", start[0:5])
+						endTime = combine(day, endTime, combineMaskYMD)
+						events[len(events)-1].End = endTime
 					}
 				} else {
 					title = s.Find("h3").Text()
