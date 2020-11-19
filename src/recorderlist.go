@@ -2,7 +2,7 @@ package main
 
 import "io"
 import "encoding/csv"
-import "url"
+import "net/url"
 
 type Recording struct {
 	Enabled bool
@@ -24,6 +24,7 @@ const DefaultRecordingsList = RecordingsList{
 	"/home/lenni/.config/go-radio/recordings.csv",
 	[]int{0, 1, 2, 3},
 	"02.01.2006 15:04:05",
+	nil,
 }
 
 func (list RecordingsList) Load() *[]error {
@@ -42,7 +43,8 @@ func (list RecordingsList) Load() *[]error {
 	for {
 		rc, err = rdr.Read()
 		if err == io.EOF {
-			// return:
+			// last record is nil & io.EOF, return:
+			f.Close()
 			return &errs
 		} else if err != nil {
 			errs = append(errs, err)
@@ -116,7 +118,16 @@ func (list RecordingsList) Save() *[]error {
 		if pos > 0 {
 			rc[pos] = rcd.End.Format(list.TimeFormat)
 		}
+
+		err = wr.Write(rc)
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
+
+	wr.Flush()
+	f.Close()
+	return *errs
 }
 
 func formatBool(b *bool) string {
