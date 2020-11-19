@@ -1,6 +1,9 @@
 bin/
 *.out
 
+## Testing out concepts, this is not the tests folder:
+test/
+
 *.mp3
 *.mkv
 *.ts

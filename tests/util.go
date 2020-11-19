@@ -12,10 +12,8 @@ import "bufio"
 const allOnByte byte = 0b11111111
 
 func main() {
-	testCompare()
 	zerotime, _ := time.Parse("", "")
 	fmt.Println("true :", zerotime.Equal(randomTime(0)))
-	testReclist()
 }
 
 func deleteFirstLine(path string) {
