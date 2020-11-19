@@ -7,11 +7,30 @@ import "time"
 import "os"
 import "fmt"
 
+import "github.com/scrouthtv/go-radio/util"
+
 type Recording struct {
 	Enabled bool
 	Stream  *url.URL
 	Start   *time.Time
 	End     *time.Time
+}
+
+func (this Recording) Equal(other util.Comparable) bool {
+	var rec Recording
+	var ok bool
+	rec, ok = other.(Recording)
+	if !ok {
+		return false
+	} else if other == nil {
+		return false
+	} else if this.Enabled != rec.Enabled {
+		return false
+	} else if this.Stream.String() != rec.Stream.String() {
+		return false
+	} else {
+		return this.Start.Equal(*rec.Start) && this.End.Equal(*rec.End)
+	}
 }
 
 type RecordingsList struct {
@@ -21,7 +40,7 @@ type RecordingsList struct {
 	FieldOrder []int
 	TimeFormat string
 	Recordings []Recording
-	// was *[], []* makes more sense but is slower: https://philpearl.github.io/post/bad_go_slice_of_pointers/
+	// was *[], []* makes more sense but is stupid: https://philpearl.github.io/post/bad_go_slice_of_pointers/
 }
 
 func (rec Recording) String() string {
@@ -36,7 +55,7 @@ var DefaultRecordingsList = RecordingsList{
 	nil,
 }
 
-func (list RecordingsList) Load() *[]error {
+func (list *RecordingsList) Load() *[]error {
 	var err error
 	var errs []error
 	list.Recordings = nil // empty the array in memory
@@ -60,7 +79,23 @@ func (list RecordingsList) Load() *[]error {
 			errs = append(errs, err)
 			continue
 		}
+		fmt.Println("positions:")
+		fmt.Println("0 =>", list.FieldOrder[0])
+		fmt.Println("1 =>", list.FieldOrder[1])
+		fmt.Println("2 =>", list.FieldOrder[2])
+		fmt.Println("3 =>", list.FieldOrder[3])
+		fmt.Println("inverse positions:")
+		fmt.Println("0 =>", list.firstPositionFor(0))
+		fmt.Println("1 =>", list.firstPositionFor(1))
+		fmt.Println("2 =>", list.firstPositionFor(2))
+		fmt.Println("3 =>", list.firstPositionFor(3))
+		fmt.Println("read a line:")
+		fmt.Println(rc)
 		rcd.Enabled = parseBool(&rc[list.FieldOrder[0]])
+		fmt.Println("bool:", rc[list.FieldOrder[0]])
+		fmt.Println("stream:", rc[list.FieldOrder[1]])
+		fmt.Println("start:", rc[list.FieldOrder[2]])
+		fmt.Println("end:", rc[list.FieldOrder[3]])
 		rcd.Stream, err = url.Parse(rc[list.FieldOrder[1]])
 		if err != nil {
 			errs = append(errs, err)
@@ -68,19 +103,25 @@ func (list RecordingsList) Load() *[]error {
 		}
 
 		var startTime, endTime time.Time
-
 		startTime, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 		rcd.Start = &startTime
-		endTime, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
+		endTime, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[3]])
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 		rcd.End = &endTime
+
+		fmt.Println("parsed to:")
+		fmt.Println("bool:", rcd.Enabled)
+		fmt.Println("stream:", rcd.Stream.String())
+		fmt.Println("start:", rcd.Start.String())
+		fmt.Println("end:", rcd.End.String())
+		fmt.Println("--")
 
 		list.Recordings = append(list.Recordings, rcd)
 	}
@@ -92,7 +133,8 @@ func (list RecordingsList) Load() *[]error {
 // Now if I want to save the start field for example, I need to know at which
 // position it is (in this example 1). This function is basically the inverse of
 // the FieldOrder list
-func (list RecordingsList) firstPositionFor(searchField int) int {
+func (list *RecordingsList) firstPositionFor(searchField int) int {
+	return list.FieldOrder[searchField]
 	var pos, field int
 	for pos, field = range list.FieldOrder {
 		if field == searchField {
@@ -104,7 +146,7 @@ func (list RecordingsList) firstPositionFor(searchField int) int {
 
 // Writes a file with the specified recordings
 // Ignores fields that are not specified in the FieldOrder
-func (list RecordingsList) Save() *[]error {
+func (list *RecordingsList) Save() *[]error {
 	var err error
 	var errs []error
 	var f *os.File

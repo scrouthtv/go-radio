@@ -7,8 +7,10 @@ import "time"
 import "fmt"
 
 func main() {
+	zerotime, _ := time.Parse("", "")
+	fmt.Println("true :", zerotime.Equal(randomTime(0)))
 	testReclist()
-	//testCsv()
+	//testCompare()
 }
 
 func randomInt(min int, max int) int {
@@ -25,13 +27,35 @@ func randomBool() bool {
 	return rand.Intn(2) == 0
 }
 
-func randomTime() time.Time {
-	var year int = randomInt(2000, 2030)
-	var month time.Month = time.Month(randomInt(1, 12))
-	var day int = rand.Intn(29)
-	var hour, minute, sec, nsec = rand.Intn(24), rand.Intn(60), rand.Intn(60), rand.Intn(1000000000)
-	var zone *time.Location
-	zone, _ = time.LoadLocation(randomElement(zones))
+func randomTime(mask byte) time.Time {
+	var year, day, hour, minute, sec, nsec = 0, 1, 0, 0, 0, 0
+	var month time.Month = time.January
+	var zone *time.Location = time.UTC
+
+	if mask&0b10000000 > 0 {
+		year = randomInt(2000, 2030)
+	}
+	if mask&0b01000000 > 0 {
+		month = time.Month(randomInt(1, 12))
+	}
+	if mask&0b00100000 > 0 {
+		day = rand.Intn(29)
+	}
+	if mask&0b00010000 > 0 {
+		hour = rand.Intn(24)
+	}
+	if mask&0b00001000 > 0 {
+		minute = rand.Intn(60)
+	}
+	if mask&0b00000100 > 0 {
+		sec = rand.Intn(60)
+	}
+	if mask&0b0000010 > 0 {
+		nsec = rand.Intn(1000000000)
+	}
+	if mask&0b0000001 > 0 {
+		zone, _ = time.LoadLocation(randomElement(zones))
+	}
 	return time.Date(year, month, day, hour, minute, sec, nsec, zone)
 }
 
