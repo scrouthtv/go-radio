@@ -37,18 +37,23 @@ jobs:
       if: success()
       run: mkdir ./bin/
 
-    - name: Build for amd64
+    - name: Build for linux
       if: success()
-      run: GOOS=linux GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
+        GOOS=linux GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
+        GOOS=linux GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
+
+    - name: Upload amd64 build
+      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux amd64
         path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-amd64
         retention-days: 14
 
-    - name: Build for 386
+    - name: Upload 386 build
       if: success()
-      run: GOOS=linux GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux 386
@@ -57,7 +62,6 @@ jobs:
 
     - name: Upload arm build
       if: success()
-      run: GOOS=linux GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux arm
