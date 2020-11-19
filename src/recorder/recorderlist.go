@@ -3,6 +3,9 @@ package recorder
 import "io"
 import "encoding/csv"
 import "net/url"
+import "time"
+import "os"
+import "fmt"
 
 type Recording struct {
 	Enabled bool
@@ -17,10 +20,16 @@ type RecordingsList struct {
 	// in which order the fields enabled, stream, start, end appear in the file:
 	FieldOrder []int
 	TimeFormat string
-	Recordings *[]Recording
+	Recordings []Recording
+	// was *[], []* makes more sense but is slower: https://philpearl.github.io/post/bad_go_slice_of_pointers/
 }
 
-const DefaultRecordingsList = RecordingsList{
+func (rec Recording) String() string {
+	return fmt.Sprintf("Enabled: %s, via %s,\n%s - %s", formatBool(&rec.Enabled),
+		rec.Stream.String(), rec.Start.String(), rec.End.String())
+}
+
+var DefaultRecordingsList = RecordingsList{
 	"/home/lenni/.config/go-radio/recordings.csv",
 	[]int{0, 1, 2, 3},
 	"02.01.2006 15:04:05",
@@ -28,10 +37,11 @@ const DefaultRecordingsList = RecordingsList{
 }
 
 func (list RecordingsList) Load() *[]error {
+	var err error
 	var errs []error
 	list.Recordings = nil // empty the array in memory
 	var f *os.File
-	f, err = os.OpenFile(list.path, os.O_RDONLY, 0644)
+	f, err = os.OpenFile(list.Path, os.O_RDONLY, 0644)
 	if err != nil {
 		errs = append(errs, err)
 		return &errs
@@ -50,25 +60,31 @@ func (list RecordingsList) Load() *[]error {
 			errs = append(errs, err)
 			continue
 		}
-		rcd.Enabled = parseBool(rc[list.FieldOrder[0]])
+		rcd.Enabled = parseBool(&rc[list.FieldOrder[0]])
 		rcd.Stream, err = url.Parse(rc[list.FieldOrder[1]])
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
-		rcd.Start, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
+
+		var startTime, endTime time.Time
+
+		startTime, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
-		rcd.Time, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
+		rcd.Start = &startTime
+		endTime, err = time.Parse(list.TimeFormat, rc[list.FieldOrder[2]])
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
+		rcd.End = &endTime
 
 		list.Recordings = append(list.Recordings, rcd)
 	}
+	return &errs // we're never coming here anyways
 }
 
 // if FieldOrder is e. g. [ 0, 2, 3, 1 ], that means that the actual file itself
@@ -89,9 +105,10 @@ func (list RecordingsList) firstPositionFor(searchField int) int {
 // Writes a file with the specified recordings
 // Ignores fields that are not specified in the FieldOrder
 func (list RecordingsList) Save() *[]error {
+	var err error
 	var errs []error
 	var f *os.File
-	f, err = os.OpenFile(list.Path, os.O_RDWR|os.O_CREATE, 0644)
+	f, err = os.OpenFile(list.Path, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		errs = append(errs, err)
 		return &errs
@@ -101,21 +118,21 @@ func (list RecordingsList) Save() *[]error {
 	var rc []string = make([]string, len(list.FieldOrder))
 	var rcd Recording
 	var pos int
-	for _, rcd = range &list.Recordings {
+	for _, rcd = range list.Recordings {
 		pos = list.firstPositionFor(0)
-		if pos > 0 {
-			rc[pos] = formatBool(rcd.Enabled)
+		if pos != -1 {
+			rc[pos] = formatBool(&rcd.Enabled)
 		}
 		pos = list.firstPositionFor(1)
-		if pos > 0 {
+		if pos != -1 {
 			rc[pos] = rcd.Stream.String()
 		}
 		pos = list.firstPositionFor(2)
-		if pos > 0 {
+		if pos != -1 {
 			rc[pos] = rcd.Start.Format(list.TimeFormat)
 		}
 		pos = list.firstPositionFor(3)
-		if pos > 0 {
+		if pos != -1 {
 			rc[pos] = rcd.End.Format(list.TimeFormat)
 		}
 
@@ -123,11 +140,15 @@ func (list RecordingsList) Save() *[]error {
 		if err != nil {
 			errs = append(errs, err)
 		}
+		err = wr.Error()
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	wr.Flush()
-	f.Close()
-	return *errs
+	//f.Close()
+	return &errs
 }
 
 func formatBool(b *bool) string {
