@@ -22,14 +22,18 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     
+    - name: Cache dependencies
+      id: cache-dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod/
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Get dependencies
       run: |
         go get -v -t -d ./...
-
-    - name: Trying to find dependency folder
-      run: |
-        ls /opt/hostedtoolcache/go/**
-        echo $( go env GOROOT )
 
     - name: Test
       run: go test -v ./tests/
