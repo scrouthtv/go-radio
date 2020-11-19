@@ -25,41 +25,34 @@ jobs:
     - name: Get dependencies
       run: |
         go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
+
+    - name: Trying to find dependency folder
+      run: |
+        ls ${{ env.goroot }}
 
     - name: Test
       run: go test -v ./tests/
 
     - name: Build for linux
-      if: success()
       run: |
         GOOS=linux GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
         GOOS=linux GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
         GOOS=linux GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
 
     - name: Upload amd64 build
-      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux amd64
-        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-amd64
-        retention-days: 14
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-linux-amd64
 
     - name: Upload 386 build
-      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux 386
         path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-linux-386
-        retention-days: 14
 
     - name: Upload arm build
-      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for linux arm
         path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-linux-arm
-        retention-days: 14
