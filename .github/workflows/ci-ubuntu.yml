@@ -44,17 +44,12 @@ jobs:
         GOOS=linux GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
         GOOS=linux GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
 
-    - name: List available builds
-      run: |
-        echo $GITHUB_SHA
-        ls bin
-
     - name: Upload amd64 build
       if: success()
       uses: actions/upload-artifact@v2
       with:
         name: $GITHUB_SHA for linux/amd64
-        path: bin/go-radio-${{ GITHUB_SHA }}-linux-amd64
+        path: bin/go-radio-${{ github.sha }}-amd64
         retention-days: 14
 
     - name: Upload 386 build
@@ -62,7 +57,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: $GITHUB_SHA for linux/386
-        path: bin/go-radio-*-linux-386
+        path: bin/go-radio-$GITHUB_SHA-linux-386
         retention-days: 14
 
     - name: Upload arm build
@@ -70,5 +65,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: $GITHUB_SHA for linux/arm
-        path: bin/go-radio-${{ gitub.sha }}-linux-arm
+        path: bin/go-radio-$GITHUB_SHA-linux-arm
         retention-days: 14
