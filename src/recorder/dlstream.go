@@ -4,12 +4,17 @@ import "io"
 import "net/http"
 import "os"
 import "time"
+import "errors"
 
 type DownloadRecorder struct {
 }
 
-func (rec *DownloadRecorder) record(stream string, filepath string, seconds int) error {
-	var client http.Client = http.Client{Timeout: time.Duration(seconds) * time.Second}
+const buffer_size uint = 8192
+
+var buf []byte = make([]byte, buffer_size)
+
+func (rec DownloadRecorder) Record(stream string, filepath string, end time.Time) error {
+	var client http.Client = http.Client{}
 
 	var out *os.File
 	var err error
@@ -19,15 +24,40 @@ func (rec *DownloadRecorder) record(stream string, filepath string, seconds int)
 	}
 
 	var resp *http.Response
-	var err error
 	resp, err = client.Get(stream)
 	if err != nil {
 		out.Close()
 		return err
 	}
 
-	var n int64
-	n, err = io.Copy(resp.Body, out)
+	var read, written int
+	for {
+		read, err = resp.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			out.Close()
+			resp.Body.Close()
+			return err
+		}
+		if read == 0 {
+			// internet connection down for now
+			continue
+		}
+		written, err = out.Write(buf[:read])
+		if err != nil {
+			out.Close()
+			resp.Body.Close()
+			return err
+		}
+		if read != written {
+			out.Close()
+			resp.Body.Close()
+			return errors.New("Could not write file.")
+		}
+
+		if time.Now().After(end) {
+			return nil
+		}
+	}
 
 	return err
 }
