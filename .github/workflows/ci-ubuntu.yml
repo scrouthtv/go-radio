@@ -57,7 +57,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: $GITHUB_SHA for linux/386
-        path: **/go-radio-${{ github.sha }}-linux-386
+        path: ./**/go-radio-${{ github.sha }}-linux-386
         retention-days: 14
 
     - name: Upload arm build
