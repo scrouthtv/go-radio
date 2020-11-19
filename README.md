@@ -7,6 +7,8 @@ The goals of this project are
 
 Currently only two german stations are supported. Support will be extended in the future.
 
+At this point there aren't any time zone considerations yet (and it will stay like that for some time). If you move to a different time zone with recorders preset, or are in a different time zone than the radio station, things will be weird.
+
 This program is currently in a Pre-Alpha state. Don't use it unless you know exactly what you are doing!
 ```
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
