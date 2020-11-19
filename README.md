@@ -4,6 +4,7 @@ The goals of this project are
  - [ ] program recordings for the future and waking the pc from standby on start
  - [ ] remote recorders -> Web gui
  - [ ] have a preview for upcoming programmes, the ability to program recurring programmes
+ - [ ] Parallel recordings
 
 Currently only two german stations are supported. Support will be extended in the future.
 
