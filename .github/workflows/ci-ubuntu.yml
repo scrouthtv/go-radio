@@ -28,8 +28,7 @@ jobs:
 
     - name: Trying to find dependency folder
       run: |
-        echo ${{ env }}
-        echo $( go env GOROOT )
+        ls $( go env GOROOT )
 
     - name: Test
       run: go test -v ./tests/
