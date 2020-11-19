@@ -30,8 +30,23 @@ jobs:
             dep ensure
         fi
 
-    - name: Build
-      run: go build -v .
-
     - name: Test
       run: go test -v ./tests/
+
+    - name: Create output folder for binaries
+      if: success()
+      run: mkdir ./bin/
+
+    - name: Build for linux
+      if: success()
+      run: |
+        GOOS=linux GOARCH=amd64 go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
+        GOOS=linux GOARCH=386 go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
+        GOOS=linux GOARCH=arm go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
+
+    - name: Upload build artifacts
+      if: success()
+      uses: actions/cache@v2
+      with:
+        name: my-artifact
+        path: bin/*-linux-*
