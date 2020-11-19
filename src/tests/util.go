@@ -5,12 +5,54 @@ import "strings"
 import "net/url"
 import "time"
 import "fmt"
+import "io/ioutil"
+import "os"
+import "bufio"
+
+const allOnByte byte = 0b11111111
 
 func main() {
+	testCompare()
 	zerotime, _ := time.Parse("", "")
 	fmt.Println("true :", zerotime.Equal(randomTime(0)))
 	testReclist()
-	//testCompare()
+}
+
+func deleteFirstLine(path string) {
+	writeLines(path, fileLines(path)[1:])
+}
+
+func randomFile(pattern string) string {
+	file, err := ioutil.TempFile("", pattern)
+	file.Close()
+	check(true, err)
+	return file.Name()
+}
+
+func fileLines(path string) []string {
+	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	check(true, err)
+	var lines []string
+	var scanner *bufio.Scanner = bufio.NewScanner(f)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	f.Close()
+	check(true, scanner.Err())
+	return lines
+}
+
+func writeLines(path string, lines []string) {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
+	check(true, err)
+	var writer *bufio.Writer = bufio.NewWriter(f)
+	for _, line := range lines {
+		_, err = writer.WriteString(line + "\n")
+		check(true, err)
+	}
+	check(true, writer.Flush())
+	f.Close()
+	return
 }
 
 func randomInt(min int, max int) int {

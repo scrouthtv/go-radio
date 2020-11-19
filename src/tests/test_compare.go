@@ -5,18 +5,31 @@ import "fmt"
 import "github.com/scrouthtv/go-radio/util"
 import "github.com/scrouthtv/go-radio/recorder"
 
-const allOnByte byte = 0b11111111
-
 func testCompare() {
+	testCompareStringSlice()
 	testCompareRecording()
 	testCompareRecordingSlice()
+}
+
+func testCompareStringSlice() {
+	a := []string{"asdf", "asdf", "qwertz"}
+	b := []string{"asdf", "qwertz", "asdf"}
+	c := []string{"asdf", "qwertz"}
+	d := []string{"asdf", "huiu", "qwertz"}
+	e := []string{"asdf", "asdf", "qwertz", "qwertz"}
+	f := []string{"asdf", "asdf", "qwertz"}
+	fmt.Println("false :", util.IsStringSliceEqual(a, b))
+	fmt.Println("false :", util.IsStringSliceEqual(a, c))
+	fmt.Println("false :", util.IsStringSliceEqual(a, d))
+	fmt.Println("false :", util.IsStringSliceEqual(a, e))
+	fmt.Println("true :", util.IsStringSliceEqual(a, f))
 }
 
 func testCompareRecordingSlice() {
 	a, b, c := randomRecordingsSlice(3, allOnByte), randomRecordingsSlice(5, allOnByte), randomRecordingsSlice(5, allOnByte)
 	d := c
-	var ca, cb, cc, cd []util.Comparable = toComparableSlice(a), toComparableSlice(b),
-		toComparableSlice(c), toComparableSlice(d)
+	var ca, cb, cc, cd []util.Comparable = recSliceToComparableSlice(a), recSliceToComparableSlice(b),
+		recSliceToComparableSlice(c), recSliceToComparableSlice(d)
 
 	fmt.Println("true :", util.IsSliceEqual(ca, ca))
 	fmt.Println("false :", util.IsSliceEqual(ca, cb))
@@ -24,7 +37,8 @@ func testCompareRecordingSlice() {
 	fmt.Println("true :", util.IsSliceEqual(cc, cd))
 }
 
-func toComparableSlice(rs []recorder.Recording) []util.Comparable {
+func recSliceToComparableSlice(rs []recorder.Recording) []util.Comparable {
+	// literally the same thing again but can't reuse it
 	cs := make([]util.Comparable, len(rs))
 	for i, r := range rs {
 		cs[i] = util.Comparable(r)
