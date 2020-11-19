@@ -79,23 +79,7 @@ func (list *RecordingsList) Load() *[]error {
 			errs = append(errs, err)
 			continue
 		}
-		fmt.Println("positions:")
-		fmt.Println("0 =>", list.FieldOrder[0])
-		fmt.Println("1 =>", list.FieldOrder[1])
-		fmt.Println("2 =>", list.FieldOrder[2])
-		fmt.Println("3 =>", list.FieldOrder[3])
-		fmt.Println("inverse positions:")
-		fmt.Println("0 =>", list.firstPositionFor(0))
-		fmt.Println("1 =>", list.firstPositionFor(1))
-		fmt.Println("2 =>", list.firstPositionFor(2))
-		fmt.Println("3 =>", list.firstPositionFor(3))
-		fmt.Println("read a line:")
-		fmt.Println(rc)
 		rcd.Enabled = parseBool(&rc[list.FieldOrder[0]])
-		fmt.Println("bool:", rc[list.FieldOrder[0]])
-		fmt.Println("stream:", rc[list.FieldOrder[1]])
-		fmt.Println("start:", rc[list.FieldOrder[2]])
-		fmt.Println("end:", rc[list.FieldOrder[3]])
 		rcd.Stream, err = url.Parse(rc[list.FieldOrder[1]])
 		if err != nil {
 			errs = append(errs, err)
@@ -116,32 +100,9 @@ func (list *RecordingsList) Load() *[]error {
 		}
 		rcd.End = &endTime
 
-		fmt.Println("parsed to:")
-		fmt.Println("bool:", rcd.Enabled)
-		fmt.Println("stream:", rcd.Stream.String())
-		fmt.Println("start:", rcd.Start.String())
-		fmt.Println("end:", rcd.End.String())
-		fmt.Println("--")
-
 		list.Recordings = append(list.Recordings, rcd)
 	}
 	return &errs // we're never coming here anyways
-}
-
-// if FieldOrder is e. g. [ 0, 2, 3, 1 ], that means that the actual file itself
-// looks like this: enabled,start,end,stream .
-// Now if I want to save the start field for example, I need to know at which
-// position it is (in this example 1). This function is basically the inverse of
-// the FieldOrder list
-func (list *RecordingsList) firstPositionFor(searchField int) int {
-	return list.FieldOrder[searchField]
-	var pos, field int
-	for pos, field = range list.FieldOrder {
-		if field == searchField {
-			return pos
-		}
-	}
-	return -1
 }
 
 // Writes a file with the specified recordings
@@ -150,7 +111,7 @@ func (list *RecordingsList) Save() *[]error {
 	var err error
 	var errs []error
 	var f *os.File
-	f, err = os.OpenFile(list.Path, os.O_RDWR|os.O_CREATE, 0755)
+	f, err = os.OpenFile(list.Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		errs = append(errs, err)
 		return &errs
@@ -159,24 +120,11 @@ func (list *RecordingsList) Save() *[]error {
 	var wr *csv.Writer = csv.NewWriter(f)
 	var rc []string = make([]string, len(list.FieldOrder))
 	var rcd Recording
-	var pos int
 	for _, rcd = range list.Recordings {
-		pos = list.firstPositionFor(0)
-		if pos != -1 {
-			rc[pos] = formatBool(&rcd.Enabled)
-		}
-		pos = list.firstPositionFor(1)
-		if pos != -1 {
-			rc[pos] = rcd.Stream.String()
-		}
-		pos = list.firstPositionFor(2)
-		if pos != -1 {
-			rc[pos] = rcd.Start.Format(list.TimeFormat)
-		}
-		pos = list.firstPositionFor(3)
-		if pos != -1 {
-			rc[pos] = rcd.End.Format(list.TimeFormat)
-		}
+		rc[list.FieldOrder[0]] = formatBool(&rcd.Enabled)
+		rc[list.FieldOrder[1]] = rcd.Stream.String()
+		rc[list.FieldOrder[2]] = rcd.Start.Format(list.TimeFormat)
+		rc[list.FieldOrder[3]] = rcd.End.Format(list.TimeFormat)
 
 		err = wr.Write(rc)
 		if err != nil {
