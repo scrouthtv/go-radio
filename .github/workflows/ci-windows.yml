@@ -14,20 +14,50 @@ jobs:
     runs-on: windows-latest
     steps:
 
-    - name: Set up Go 1.x
+    - name: Set up Go 1.15
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.15
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     
+    - name: Cache dependencies
+      id: cache-dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod/
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Get dependencies
       run: |
         go get -v -t -d ./...
 
-    - name: Build
-      run: go build -v .
-
     - name: Test
       run: go test -v ./tests/
+
+    - name: Build for windows
+      run: |
+        GOOS=windows GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-windows-amd64" .
+        GOOS=windows GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-windows-386" .
+        GOOS=windows GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-windows-arm" .
+
+    - name: Upload amd64 build
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.sha }} for windows amd64
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-amd64
+
+    - name: Upload 386 build
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.sha }} for windows 386
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-386
+
+    - name: Upload arm build
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.sha }} for windows arm
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-arm
