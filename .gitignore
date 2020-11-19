@@ -1,1 +1,6 @@
 bin/
+*.out
+
+*.mp3
+*.mkv
+*.ts

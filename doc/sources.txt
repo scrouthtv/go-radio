@@ -1,0 +1,24 @@
+The urls can be obtained via:
+ - https://www.deutschlandradio.de/streamingdienste.219.de.html
+ - https://www.swr.de/unternehmen/empfang/webradio-hoeren-alle-streams-100.html
+ - https://www1.wdr.de/unternehmen/der-wdr/empfang-technik/webradio-100.html
+ - https://www.ndr.de/service/Die-Radio-Livestream-Links,livestreams101.html
+ - https://www.br.de/unternehmen/inhalt/technik/hilfe-livestreams-br100.html
+
+Here are some urls:
+ - https://st01.sslstream.dlf.de/dlf/01/high/aac/stream.aac
+ - https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac
+ - https://st03.sslstream.dlf.de/dlf/03/high/aac/stream.aac
+ - https://st04.sslstream.dlf.de/dlf/04/high/aac/stream.aac
+ - http://mp3-live.swr.de/swr1bw_m.m3u
+ - http://mp3-live.swr.de/swr2_m.m3u
+ - http://mp3-live.swr.de/swraktuell_m.m3u
+ - https://wdr-wdr2-rheinland.icecastssl.wdr.de/wdr/wdr2/rheinland/mp3/128/stream.mp3
+ - https://wdr-wdr4-live.icecastssl.wdr.de/wdr/wdr4/live/mp3/128/stream.mp3
+ - https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3
+ - http://www.ndr.de/resources/metadaten/audio/aac/ndr1radiomv_hgw.m3u
+ - http://www.ndr.de/resources/metadaten/audio/aac/ndr2_sh.m3u
+ - http://www.ndr.de/resources/metadaten/audio/aac/ndrkultur.m3u
+
+Further urls can be found via:
+ - https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/pc/vpid/bbc_radio_five_live/format/json/jsfunc/JS_callbacks0
