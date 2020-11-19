@@ -1,4 +1,4 @@
-name: Build & Test under Ubuntu
+name: Build & Test under Windows
 
 on:
   push:
