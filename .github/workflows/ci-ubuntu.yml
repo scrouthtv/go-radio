@@ -40,13 +40,13 @@ jobs:
     - name: Build for linux
       if: success()
       run: |
-        GOOS=linux GOARCH=amd64 go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
-        GOOS=linux GOARCH=386 go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
-        GOOS=linux GOARCH=arm go build -v -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
+        GOOS=linux GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-linux-amd64" .
+        GOOS=linux GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-linux-386" .
+        GOOS=linux GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-linux-arm" .
 
     - name: Upload build artifacts
       if: success()
-      uses: actions/cache@v2
+      uses: actions/upload-artifact@v2
       with:
         name: my-artifact
         path: bin/*-linux-*
