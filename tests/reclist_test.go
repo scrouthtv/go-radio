@@ -70,7 +70,7 @@ func TestHomeExpansion(t *testing.T) {
 	if runtime.GOOS == "linux" {
 		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "~/", 1))
 	} else if runtime.GOOS == "windows" {
-		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "$HOMEPATH/", 1))
+		homeFile = strings.Replace(f.Name(), home, "$HOMEPATH/", 1)
 	} else {
 		t.Log("don't know the home prefix under ", runtime.GOOS, " skipping this test")
 		return
@@ -287,7 +287,7 @@ func (test *reclistTest) writeRandoms(amount int, t *testing.T) {
 		t.Error("Expected", amount, "records, got", len(test.list.Recordings))
 	}
 	if isRecSliceEqual(rcs, test.list.Recordings) != true {
-		t.Error(rcs, "should be equal to", test.list.Recordings)
+		t.Error(test.list.Recordings, "should be equal to", rcs)
 	}
 }
 
