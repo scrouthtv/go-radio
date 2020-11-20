@@ -40,24 +40,27 @@ jobs:
 
     - name: Build for windows
       run: |
-        GOOS=windows GOARCH=amd64 go build -o "./bin/go-radio-$GITHUB_SHA-windows-amd64" .
-        GOOS=windows GOARCH=386 go build -o "./bin/go-radio-$GITHUB_SHA-windows-386" .
-        GOOS=windows GOARCH=arm go build -o "./bin/go-radio-$GITHUB_SHA-windows-arm" .
+        $env:GOOS = 'windows'
+        $env:GOARCH = 'amd64'
+        go build -o "./bin/go-radio-$GITHUB_SHA-windows-amd64.exe" .
+        $env:GOARCH = '386'
+        go build -o "./bin/go-radio-$GITHUB_SHA-windows-386.exe" .
+        $env:GOARCH = 'arm' go build -o "./bin/go-radio-$GITHUB_SHA-windows-arm.exe" .
 
     - name: Upload amd64 build
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for windows amd64
-        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-amd64
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-amd64.exe
 
     - name: Upload 386 build
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for windows 386
-        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-386
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-386.exe
 
     - name: Upload arm build
       uses: actions/upload-artifact@v2
       with:
         name: ${{ github.sha }} for windows arm
-        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-arm
+        path: ${{ github.workspace }}/bin/go-radio-${{ github.sha }}-windows-arm.exe
