@@ -6,25 +6,33 @@ import "time"
 import "bufio"
 import "strings"
 import "fmt"
+import "runtime"
+import "io/ioutil"
+import "path/filepath"
 
 import "github.com/scrouthtv/go-radio/recorder"
 import "github.com/scrouthtv/go-radio/util"
 
 func TestReclist(t *testing.T) {
-	var normalList recorder.RecordingsList = recorder.RecordingsList{
-		randomFile("*.csv"), []int{0, 1, 2, 3}, "02.01.2006 15:04:05", nil}
+	var normalList, orderedList, dateList *recorder.RecordingsList
+
+	normalList, _ = recorder.NewRecordingsList(
+		randomFile("*.csv"), []int{0, 1, 2, 3}, "02.01.2006 15:04:05")
 	var normalTest reclistTest = reclistTest{normalList, 0b11111100}
 	t.Log("normal list in", normalList.Path)
+	defer os.Remove(normalTest.list.Path)
 
-	var orderedList recorder.RecordingsList = recorder.RecordingsList{
-		randomFile("*.csv"), []int{2, 3, 1, 0}, "15:04:05 02.01.2006", nil}
+	orderedList, _ = recorder.NewRecordingsList(
+		randomFile("*.csv"), []int{2, 3, 1, 0}, "15:04:05 02.01.2006")
 	var orderedTest reclistTest = reclistTest{orderedList, 0b11111100}
 	t.Log("ordered list in", orderedList.Path)
+	defer os.Remove(orderedTest.list.Path)
 
-	var dateList recorder.RecordingsList = recorder.RecordingsList{
-		randomFile("*.csv"), []int{0, 1, 2, 3}, time.RFC3339Nano, nil}
-	var dateTest reclistTest = reclistTest{dateList, 0b11111111}
+	dateList, _ = recorder.NewRecordingsList(
+		randomFile("*.csv"), []int{0, 1, 2, 3}, time.RFC3339Nano)
+	var dateTest reclistTest = reclistTest{dateList, allOnByte}
 	t.Log("date list in", dateList.Path)
+	defer os.Remove(dateTest.list.Path)
 
 	t.Log("write randoms test")
 	normalTest.writeRandoms(3, t)
@@ -43,10 +51,88 @@ func TestReclist(t *testing.T) {
 
 	t.Log("continuity test")
 	normalTest.fileContinuity(t)
+
+	t.Log("deleting all test files")
+}
+
+func TestHomeExpansion(t *testing.T) {
+	var home string
+	var err error
+	home, err = os.UserHomeDir()
+	check(true, err)
+	var f *os.File
+	f, err = ioutil.TempFile(home, "go-radio-*.csv")
+	check(true, err)
+	f.Close()
+	defer os.Remove(f.Name())
+
+	var homeFile string = f.Name()
+	if runtime.GOOS == "linux" {
+		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "~/", 1))
+	} else if runtime.GOOS == "windows" {
+		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "%HOMEPATH%/", 1))
+	} else {
+		t.Log("don't know the home prefix under ", runtime.GOOS, " skipping this test")
+		return
+	}
+
+	t.Log("home file is in", homeFile)
+	var homeList *recorder.RecordingsList
+	homeList, _ = recorder.NewRecordingsList(
+		homeFile, []int{0, 1, 2, 3}, time.RFC3339Nano)
+	var homeTest reclistTest = reclistTest{homeList, allOnByte}
+	homeTest.writeRandoms(3, t)
+	homeTest.deleteLocalRow(t)
+}
+
+func TestVariableExpansion(t *testing.T) {
+	var cache, cacheFile string
+	var ok bool
+
+	if runtime.GOOS == "linux" {
+		cache, ok = os.LookupEnv("XDG_CACHE_DIR")
+		if ok {
+			var f *os.File
+			var err error
+			f, err = ioutil.TempFile(cache, "go-radio-*.csv")
+			check(true, err)
+			f.Close()
+			defer os.Remove(f.Name())
+			cacheFile = filepath.Clean(strings.Replace(f.Name(), cache, "$XDG_CACHE_DIR/", 1))
+		} else {
+			t.Log("$XDG_CACHE_DIR not set, skipping this test")
+			return
+		}
+	} else if runtime.GOOS == "windows" {
+		cache, ok = os.LookupEnv("TMP")
+		if ok {
+			var f *os.File
+			var err error
+			f, err = ioutil.TempFile(cache, "go-radio-*.csv")
+			check(true, err)
+			f.Close()
+			defer os.Remove(f.Name())
+			cacheFile = filepath.Clean(strings.Replace(f.Name(), cache, "%TMP%\\", 1))
+		} else {
+			t.Log("TMP variable not set, skipping this test")
+			return
+		}
+	} else {
+		t.Log("don't know any environment variables under", runtime.GOOS, "skipping this test")
+		return
+	}
+
+	t.Log("expandable file is in", cacheFile)
+	var cacheList *recorder.RecordingsList
+	cacheList, _ = recorder.NewRecordingsList(
+		cacheFile, []int{0, 1, 2, 3}, time.RFC3339Nano)
+	var cacheTest reclistTest = reclistTest{cacheList, allOnByte}
+	cacheTest.writeRandoms(3, t)
+	cacheTest.deleteLocalRow(t)
 }
 
 type reclistTest struct {
-	list     recorder.RecordingsList
+	list     *recorder.RecordingsList
 	timemask byte
 }
 

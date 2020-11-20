@@ -34,7 +34,6 @@ func (this Recording) Equal(other util.Comparable) bool {
 }
 
 type RecordingsList struct {
-	// FULL path, no ~ or variables
 	Path string
 	// in which order the fields enabled, stream, start, end appear in the file:
 	FieldOrder []int
@@ -43,17 +42,26 @@ type RecordingsList struct {
 	// was *[], []* makes more sense but is stupid: https://philpearl.github.io/post/bad_go_slice_of_pointers/
 }
 
+func NewRecordingsList(path string, fieldOrder []int, timeFormat string) (*RecordingsList, error) {
+	var err error
+	path, err = util.ExpandPath(path)
+	if err != nil {
+		return nil, err
+	}
+	var list RecordingsList = RecordingsList{path, fieldOrder, timeFormat, nil}
+	return &list, nil
+}
+
 func (rec Recording) String() string {
 	return fmt.Sprintf("Enabled: %s, via %s,\n%s - %s", formatBool(&rec.Enabled),
 		rec.Stream.String(), rec.Start.String(), rec.End.String())
 }
 
-var DefaultRecordingsList = RecordingsList{
-	"/home/lenni/.config/go-radio/recordings.csv",
+var DefaultRecordingsList, _ = NewRecordingsList(
+	"~/.config/go-radio/recordings.csv",
 	[]int{0, 1, 2, 3},
 	"02.01.2006 15:04:05",
-	nil,
-}
+)
 
 func (list *RecordingsList) Load() *[]error {
 	var err error
