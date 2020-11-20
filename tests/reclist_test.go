@@ -70,6 +70,10 @@ func TestHomeExpansion(t *testing.T) {
 	if runtime.GOOS == "linux" {
 		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "~/", 1))
 	} else if runtime.GOOS == "windows" {
+		t.Log("home is", home)
+		t.Log(f.Name())
+		t.Log(strings.Replace(f.Name(), home, "$HOMEPATH/", 1))
+		t.Log(filepath.Join(strings.Replace(f.Name(), home, "$HOMEPATH/", 1)))
 		homeFile = strings.Replace(f.Name(), home, "$HOMEPATH/", 1)
 	} else {
 		t.Log("don't know the home prefix under ", runtime.GOOS, " skipping this test")
