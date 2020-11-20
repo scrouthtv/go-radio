@@ -70,7 +70,7 @@ func TestHomeExpansion(t *testing.T) {
 	if runtime.GOOS == "linux" {
 		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "~/", 1))
 	} else if runtime.GOOS == "windows" {
-		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "%HOMEPATH%/", 1))
+		homeFile = filepath.Clean(strings.Replace(f.Name(), home, "$HOMEPATH/", 1))
 	} else {
 		t.Log("don't know the home prefix under ", runtime.GOOS, " skipping this test")
 		return
@@ -112,7 +112,7 @@ func TestVariableExpansion(t *testing.T) {
 			check(true, err)
 			f.Close()
 			defer os.Remove(f.Name())
-			cacheFile = filepath.Clean(strings.Replace(f.Name(), cache, "%TMP%\\", 1))
+			cacheFile = filepath.Clean(strings.Replace(f.Name(), cache, "$TMP\\", 1))
 		} else {
 			t.Log("TMP variable not set, skipping this test")
 			return
