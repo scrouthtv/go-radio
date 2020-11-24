@@ -1,3 +1,9 @@
+<p align="center">
+<a href="https://codebeat.co/projects/github-com-scrouthtv-go-radio-main"><img src="https://codebeat.co/badges/c1c33497-45ea-41b2-9f51-addd838b5722" /></a>
+<img src="https://img.shields.io/github/last-commit/scrouthtv/go-radio?color=blue" />
+<img src="https://img.shields.io/github/license/scrouthtv/go-radio" />
+</p>
+
 # Go Radio Recorder
 The goals of this project are 
  - [ ] to have a recorder for radio stations via their Livestream in a similar way to [Deutschlandradio Recorder](https://deutschlandradio.de/erste-schritte.440.de.html)
