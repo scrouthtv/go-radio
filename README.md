@@ -30,3 +30,6 @@ SOFTWARE.
 *This program is not designed to circumvent Copyright restrictions. It is only meant for archiving purposes.
 As long as you don't redistribute recordings, it is considered "fair use".
 Allowance is made for "fair use" for purposes such as criticism, comment, news reporting, teaching, scholarship, and research. Fair use is a use permitted by copyright statute that might otherwise be infringing. Non-profit, educational or personal use tips the balance in favor of fair use.*
+
+More sources
+ - https://www.br.de/service/br-rss-feeds-100.html
